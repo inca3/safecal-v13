@@ -1,7 +1,17 @@
+import Header from '@/components/Header';
+import Features from '@/components/Features';
+import Testimonials from '@/components/Testimonials';
+import Blog from '@/components/Blog';
+import CTA from '@/components/CTA';
+
 export default function Home() {
   return (
-    <main>
-      <h1 className='text-3xl font-bold'>Hello World</h1>
-    </main>
+    <>
+      <Header />
+      <Features />
+      <Blog />
+      <Testimonials />
+      <CTA />
+    </>
   );
 }
