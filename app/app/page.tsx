@@ -265,6 +265,7 @@ const AddCalories = () => {
         </form>
         <form>
           <h1>Add Exercises</h1>
+          sa
         </form>
       </div>
     </section>
