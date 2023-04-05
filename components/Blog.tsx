@@ -48,8 +48,13 @@ const Blog = () => {
       <h1 className='mb-10 text-center text-2xl font-bold text-lightSkinLighter md:mb-12 md:text-4xl'>
         Blog
       </h1>
-      <div className='container'>
+      <div className='container px-16'>
         <BlogPost post={samplePost} />
+      </div>
+      <div className='mt-8 flex w-full items-center justify-center gap-2 md:mt-12'>
+        <div className='h-2 w-2 rounded-full bg-white'></div>
+        <div className='h-2 w-2 rounded-full bg-white/50'></div>
+        <div className='h-2 w-2 rounded-full bg-white/50'></div>
       </div>
     </section>
   );
