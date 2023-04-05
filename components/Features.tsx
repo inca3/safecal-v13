@@ -2,49 +2,51 @@ import Image from 'next/image';
 
 import Cutlery from '@/assets/icons/cutlery.png';
 import Water from '@/assets/icons/water.png';
-import Dumbell from '@/assets/icons/dumbbell.png';
+import Dumbbell from '@/assets/icons/dumbbell.png';
 
-const featuresList = [
+import CutleryBG from '@/assets/features/f1.png';
+import WaterBG from '@/assets/features/f2.png';
+import DumbbellBG from '@/assets/features/f3.png';
+
+export const featuresList = [
   {
     id: 0,
     image: Cutlery,
-    order: 0,
+    bgImage: CutleryBG,
+    order: 'first',
     title: 'Calorie Counter',
-    content: `Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed
-    ullamcorper condimentum nulla vitae porttitor. Morbi lobortis ornare
-    iaculis. Maecenas non justo non sem suscipit suscipit.`,
+    content: `As you log your meals throughout the day, the app will keep track of your remaining calories for the day. This can help you make informed choices about what to eat and prevent overeating.`,
   },
   {
     id: 1,
     image: Water,
+    bgImage: WaterBG,
     order: 'last',
     title: 'Water Tracker',
-    content: `Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed
-    ullamcorper condimentum nulla vitae porttitor. Morbi lobortis ornare
-    iaculis. Maecenas non justo non sem suscipit suscipit.`,
+    content: `As you input how much water you drink throughout the day, the app will keep track of your progress towards your daily goal. You can see how much water you've consumed and how much you have left to reach your goal.`,
   },
   {
     id: 2,
-    image: Dumbell,
-    order: 0,
+    image: Dumbbell,
+    bgImage: DumbbellBG,
+    order: 'first',
     title: 'Exercise Tracker',
-    content: `Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed
-    ullamcorper condimentum nulla vitae porttitor. Morbi lobortis ornare
-    iaculis. Maecenas non justo non sem suscipit suscipit.`,
+    content: `As you log your workouts, the app will provide real-time feedback on your progress. You can see how many calories you've burned, how long you've worked out, and other key metrics.t.`,
   },
 ];
 
-interface Props {
+export interface Feature {
   feature: {
     id: number;
     image: any;
+    bgImage: any;
     order: number | string;
     title: string;
     content: string;
   };
 }
 
-const Feature: React.FC<Props> = ({ feature }) => {
+const Feature: React.FC<Feature> = ({ feature }) => {
   return (
     <div className='flex flex-col items-center gap-6 px-4 text-center'>
       <Image src={feature.image} alt={feature.title} className='w-14 md:w-20' />

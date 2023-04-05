@@ -6,10 +6,11 @@ import Link from 'next/link';
 
 interface Props {
   isOpen: boolean;
-  setIsOpen: React.Dispatch<React.SetStateAction<boolean>>;
+  isUser: any;
+  closeMenu: Function;
 }
 
-const ResNav: React.FC<Props> = ({ isOpen, setIsOpen }) => {
+const ResNav: React.FC<Props> = ({ isOpen, isUser, closeMenu }) => {
   return (
     <ul
       className={`${
@@ -22,17 +23,21 @@ const ResNav: React.FC<Props> = ({ isOpen, setIsOpen }) => {
           key={item.name + 1}
           className='w-full border-b border-b-darkSkin text-center'
         >
-          <Link href={item.href}>{item.name}</Link>
+          <Link href={item.href} onClick={() => closeMenu()}>
+            {item.name}
+          </Link>
         </li>
       ))}
-      <li>
-        <Link
-          href={'/sign-in'}
-          className='rounded-md bg-darkGreen px-4 py-2 text-lightSkinLighter'
-        >
-          Sign In
+      <li className='w-full border-b border-b-darkSkin text-center'>
+        <Link href={'/app'} className='' onClick={() => closeMenu()}>
+          {isUser ? 'App' : 'Go to app'}
         </Link>
       </li>
+      {isUser && (
+        <li className='w-full border-b border-b-darkSkin text-center'>
+          <button>SIGN OUT</button>
+        </li>
+      )}
     </ul>
   );
 };
