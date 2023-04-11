@@ -2,7 +2,7 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { useState, useRef } from 'react';
 
 import { auth } from '@/utils/firebase';
@@ -19,6 +19,8 @@ import alternatePP from '@/assets/pp.png';
 
 const Navbar = () => {
   const router = useRouter();
+  const pathName = usePathname();
+
   const [user, loading] = useAuthState(auth);
   const [isOpen, setIsOpen] = useState(false);
 
@@ -47,12 +49,14 @@ const Navbar = () => {
       <Nav />
       <ResNav isOpen={isOpen} closeMenu={closeMenu} isUser={user} />
       <div className='hidden gap-2 place-self-end lg:flex lg:items-center lg:justify-center'>
-        <Link
-          href={'/sign-in'}
-          className=' rounded-md bg-darkGreen py-2 px-8 font-semibold text-lightSkinLighter '
-        >
-          Go to app
-        </Link>
+        {pathName != '/app' && (
+          <Link
+            href={'/app'}
+            className=' rounded-md bg-darkGreen py-2 px-8 font-semibold text-lightSkinLighter '
+          >
+            Go to app
+          </Link>
+        )}
         <ProfileMenu user={user} logOut={logOut} />
       </div>
       <div
@@ -80,8 +84,8 @@ const ProfileMenu: React.FC<any> = ({ user, logOut }) => {
       <Image
         src={user?.photoURL || alternatePP}
         alt='profile'
-        height={32}
-        width={32}
+        height={40}
+        width={40}
         className='cursor-pointer rounded-full border-2 border-darkGreen object-cover'
       />
       <input

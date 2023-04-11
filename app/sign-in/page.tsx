@@ -9,7 +9,8 @@ import {
   signInWithEmailAndPassword,
   GoogleAuthProvider,
 } from 'firebase/auth';
-import { auth } from '@/utils/firebase';
+import { auth, db } from '@/utils/firebase';
+import { doc, setDoc } from 'firebase/firestore';
 import { useAuthState } from 'react-firebase-hooks/auth';
 
 import { AiFillGoogleCircle } from 'react-icons/ai';
@@ -26,6 +27,12 @@ const SignIn = () => {
   const GoogleLogin = async () => {
     try {
       const result = await signInWithPopup(auth, googleProvider);
+      const userRef = doc(db, 'users', result.user.uid);
+      await setDoc(userRef, {
+        name: result.user.displayName,
+        email: result.user.email,
+        uid: result.user.uid,
+      });
       router.push('/app');
     } catch (error) {
       console.log(error);

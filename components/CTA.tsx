@@ -5,7 +5,8 @@ import Link from 'next/link';
 import { AiFillGoogleCircle } from 'react-icons/ai';
 import { useRouter } from 'next/navigation';
 
-import { auth } from '@/utils/firebase';
+import { doc, setDoc } from 'firebase/firestore';
+import { auth, db } from '@/utils/firebase';
 import { useAuthState } from 'react-firebase-hooks/auth';
 
 import {
@@ -31,6 +32,12 @@ const CTA = () => {
       const user = userCredential.user;
       await updateProfile(user, {
         displayName: name,
+      });
+      const userRef = doc(db, 'users', user.uid);
+      await setDoc(userRef, {
+        name: user.displayName,
+        email: user.email,
+        uid: user.uid,
       });
       router.push('/app');
     } catch (error) {
