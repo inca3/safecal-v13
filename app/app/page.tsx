@@ -46,25 +46,6 @@ interface CalendarProps {
   firstDayCurrentMonth: Date;
 }
 
-interface TrackerProps {
-  selectedDay: Date;
-  tracker: [
-    {
-      id: string;
-      cal: number;
-      amount: number;
-      measure: string;
-      carbs?: number;
-      fat?: number;
-      protein?: number;
-      type: string;
-      name: string;
-      userRef: string;
-      time?: number;
-    }
-  ];
-}
-
 const AppHome = () => {
   const router = useRouter();
   const [user, loading] = useAuthState(auth);
@@ -105,7 +86,9 @@ const AppHome = () => {
       );
       const q = query(collectionRef);
       const unsubscribe = onSnapshot(q, (snapshot) => {
-        setDailyData(snapshot.docs.map((doc) => doc.data()));
+        setDailyData(
+          snapshot.docs.map((doc) => ({ ...doc.data(), id: doc.id }))
+        );
         console.log(dailyData);
       });
       return unsubscribe;
@@ -115,7 +98,7 @@ const AppHome = () => {
     }
   }, [selectedDay]);
 
-  if (loading) return;
+  if (loading) return <></>;
 
   return (
     <div className='container grid grid-cols-1 justify-center gap-10 py-10 px-10 md:py-16 lg:grid-cols-2'>
@@ -210,6 +193,25 @@ const Calendar: React.FC<CalendarProps> = ({
   );
 };
 
+interface TrackerProps {
+  selectedDay: Date;
+  tracker: [
+    {
+      id: string;
+      cal: number;
+      amount: number;
+      measure: string;
+      carbs?: number;
+      fat?: number;
+      protein?: number;
+      type: string;
+      name: string;
+      userRef: string;
+      time?: number;
+    }
+  ];
+}
+
 const Tracker: React.FC<TrackerProps> = ({ tracker, selectedDay }) => {
   if (tracker.length < 1) {
     return (
@@ -224,50 +226,68 @@ const Tracker: React.FC<TrackerProps> = ({ tracker, selectedDay }) => {
         {format(selectedDay, 'dd MMMM yyyy')}
       </h1>
       <ul className='flex flex-col gap-2'>
-        <h2>Meals</h2>
-        {tracker
-          ?.filter((item: { type: string }) => item.type == 'meal')
-          .map((meal) => (
-            <li
-              key={meal.id}
-              className='flex justify-between rounded-md bg-lightSkinLighter px-4 py-2'
-            >
-              <p>
-                {meal.name}{' '}
-                <span className='text-sm'>
-                  ({meal.amount + ' ' + meal.measure})
-                </span>
-              </p>
-              <p>{meal.cal} cal</p>
-            </li>
-          ))}
-        <h2>Water</h2>
-        <li className='flex justify-between rounded-md bg-lightSkinLighter px-4 py-2'>
-          <p>Water</p>
-          <span className=''>
+        {tracker.filter((item) => item.type == 'meal').length ? (
+          <>
+            <h2>Meals</h2>
             {tracker
-              ?.filter((item: { type: string }) => item.type == 'water')
-              .reduce((a, b) => (a = a + Number(b.amount)), 0)}{' '}
-            ml
-          </span>
-        </li>
-        <h2>Exercises</h2>
-        {tracker
-          ?.filter((item: { type: string }) => item.type == 'exercise')
-          .map((exercise) => (
-            <li
-              key={exercise.id}
-              className='flex justify-between rounded-md bg-lightSkinLighter px-4 py-2'
-            >
-              <p>
-                {exercise.name}{' '}
-                <span className='text-sm'>
-                  ({exercise.time + ' ' + exercise.measure})
-                </span>
-              </p>
-              <p>{exercise.cal} cal</p>
+              ?.filter((item: { type: string }) => item.type == 'meal')
+              .map((meal) => (
+                <li
+                  key={meal.id}
+                  className='flex justify-between rounded-md bg-lightSkinLighter px-4 py-2'
+                >
+                  <p>
+                    {meal.name}{' '}
+                    <span className='text-sm'>
+                      ({meal.amount + ' ' + meal.measure})
+                    </span>
+                  </p>
+                  <p>{meal.cal} cal</p>
+                </li>
+              ))}
+          </>
+        ) : (
+          <></>
+        )}
+        {tracker.filter((item) => item.type == 'water').length ? (
+          <>
+            <h2>Water</h2>
+            <li className='flex justify-between rounded-md bg-lightSkinLighter px-4 py-2'>
+              <p>Water</p>
+              <span className=''>
+                {tracker
+                  ?.filter((item: { type: string }) => item.type == 'water')
+                  .reduce((a, b) => (a = a + Number(b.amount)), 0)}{' '}
+                ml
+              </span>
             </li>
-          ))}
+          </>
+        ) : (
+          <></>
+        )}
+        {tracker.filter((item) => item.type == 'exercise').length ? (
+          <>
+            <h2>Exercises</h2>
+            {tracker
+              ?.filter((item: { type: string }) => item.type == 'exercise')
+              .map((exercise) => (
+                <li
+                  key={exercise.id}
+                  className='flex justify-between rounded-md bg-lightSkinLighter px-4 py-2'
+                >
+                  <p>
+                    {exercise.name}{' '}
+                    <span className='text-sm'>
+                      ({exercise.time + ' ' + exercise.measure})
+                    </span>
+                  </p>
+                  <p>{exercise.cal} cal</p>
+                </li>
+              ))}
+          </>
+        ) : (
+          <></>
+        )}
       </ul>
     </div>
   );
@@ -301,22 +321,23 @@ const AddCalories: React.FC<CalorieProps> = ({ user, selectedDay }) => {
   const [meal, setMeal] = useState(initialMeal);
   const addMeal = async (e: React.SyntheticEvent) => {
     e.preventDefault();
-    const firstCollectionRef = doc(db, 'datas', user.uid);
-    const collectionRef = collection(
-      firstCollectionRef,
-      format(selectedDay, 'dd-MM-yyyy')
-    );
-    const docRef = await addDoc(collectionRef, {
-      name: meal.label,
-      ...meal.selection,
-      measure: meal.measure,
-      type: 'meal',
-      userRef: user.uid,
-    });
-    await updateDoc(docRef, {
-      id: docRef.id,
-    });
-    setMsg('Meal successfuly added.');
+    try {
+      const firstCollectionRef = doc(db, 'datas', user.uid);
+      const collectionRef = collection(
+        firstCollectionRef,
+        format(selectedDay, 'dd-MM-yyyy')
+      );
+      await addDoc(collectionRef, {
+        name: meal.label,
+        ...meal.selection,
+        measure: meal.measure,
+        type: 'meal',
+        userRef: user.uid,
+      });
+      setMsg('Meal successfuly added.');
+    } catch (error) {
+      console.log(error);
+    }
   };
 
   const handleChangeMeal = (selectedOption: any) => {

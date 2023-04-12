@@ -1,6 +1,7 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import CTA from '@/components/CTA';
 
 import Image from 'next/image';
 import {
@@ -19,6 +20,7 @@ import HeaderImage from '@/assets/signin.webp';
 const SignIn = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [isMember, setIsMember] = useState(true);
 
   const [user, loading] = useAuthState(auth);
 
@@ -55,7 +57,7 @@ const SignIn = () => {
 
   return (
     <section className='container flex flex-col items-center justify-center gap-4 py-10 md:py-16'>
-      <h1 className='text-center text-xl font-bold text-darkText md:text-3xl'>
+      <h1 className='text-center text-xl font-bold text-darkText md:text-4xl'>
         You are one step away from reaching your goals!
       </h1>
       <p>
@@ -94,6 +96,16 @@ const SignIn = () => {
       >
         <AiFillGoogleCircle className='h-6 w-6' /> <p>Sign in with Google</p>
       </button>
+      <p>
+        {"Don't have account, "}
+        <span
+          className='font-bold underline'
+          onClick={() => setIsMember(false)}
+        >
+          sign up!
+        </span>
+      </p>
+      {!isMember && <CTA />}
       <div className='relative h-80 w-full overflow-hidden rounded-md md:h-96'>
         <Image
           src={HeaderImage}
