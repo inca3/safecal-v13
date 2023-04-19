@@ -99,7 +99,7 @@ const SignIn = () => {
       <p>
         {"Don't have account, "}
         <span
-          className='font-bold underline'
+          className='cursor-pointer font-bold underline'
           onClick={() => setIsMember(false)}
         >
           sign up!

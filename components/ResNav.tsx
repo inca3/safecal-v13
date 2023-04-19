@@ -1,6 +1,8 @@
 'use client';
 
 import { menu } from './Nav';
+import { auth } from '@/utils/firebase';
+import { useRouter } from 'next/navigation';
 
 import Link from 'next/link';
 
@@ -11,6 +13,12 @@ interface Props {
 }
 
 const ResNav: React.FC<Props> = ({ isOpen, isUser, closeMenu }) => {
+  const router = useRouter();
+  const logOut = () => {
+    auth.signOut();
+    router.push('/');
+    closeMenu();
+  };
   return (
     <ul
       className={`${
@@ -35,7 +43,7 @@ const ResNav: React.FC<Props> = ({ isOpen, isUser, closeMenu }) => {
       </li>
       {isUser && (
         <li className='w-full border-b border-b-darkSkin text-center'>
-          <button>SIGN OUT</button>
+          <button onClick={logOut}>SIGN OUT</button>
         </li>
       )}
     </ul>

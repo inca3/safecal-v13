@@ -12,11 +12,11 @@ import {
   isEqual,
   parse,
   add,
-  parseISO,
 } from 'date-fns';
 import { useState, useEffect } from 'react';
 
 import { IoIosArrowBack, IoIosArrowForward } from 'react-icons/io';
+import { CiCircleRemove } from 'react-icons/ci';
 import { BsDot } from 'react-icons/bs';
 
 import { auth, db } from '@/utils/firebase';
@@ -29,11 +29,10 @@ import {
   QuerySnapshot,
   addDoc,
   collection,
+  deleteDoc,
   doc,
   onSnapshot,
   query,
-  setDoc,
-  updateDoc,
 } from 'firebase/firestore';
 import { User } from 'firebase/auth';
 
@@ -110,7 +109,8 @@ const AppHome = () => {
         goPrevMonth={goPrevMonth}
         firstDayCurrentMonth={firstDayCurrentMonth}
       />
-      <Tracker tracker={dailyData} selectedDay={selectedDay} />
+      <Tracker tracker={dailyData} selectedDay={selectedDay} user={user} />
+      <Graphs />
       <AddCalories user={user} selectedDay={selectedDay} />
     </div>
   );
@@ -195,6 +195,7 @@ const Calendar: React.FC<CalendarProps> = ({
 
 interface TrackerProps {
   selectedDay: Date;
+  user: User;
   tracker: [
     {
       id: string;
@@ -212,7 +213,15 @@ interface TrackerProps {
   ];
 }
 
-const Tracker: React.FC<TrackerProps> = ({ tracker, selectedDay }) => {
+const Tracker: React.FC<TrackerProps> = ({ tracker, selectedDay, user }) => {
+  const removeAny = async (id: string) => {
+    try {
+      const docRef = doc(db, 'datas', user.uid);
+      await deleteDoc(doc(docRef, format(selectedDay, 'dd-MM-yyyy'), id));
+    } catch (error) {
+      console.log(error);
+    }
+  };
   if (tracker.length < 1) {
     return (
       <h1 className='place-self-center text-xl font-bold text-darkText'>
@@ -226,9 +235,9 @@ const Tracker: React.FC<TrackerProps> = ({ tracker, selectedDay }) => {
         {format(selectedDay, 'dd MMMM yyyy')}
       </h1>
       <ul className='flex flex-col gap-2'>
-        {tracker.filter((item) => item.type == 'meal').length ? (
+        {tracker.filter((item) => item.type == 'meal').length > 0 && (
           <>
-            <h2>Meals</h2>
+            <h2 className='font-bold text-darkText'>Meals</h2>
             {tracker
               ?.filter((item: { type: string }) => item.type == 'meal')
               .map((meal) => (
@@ -242,32 +251,50 @@ const Tracker: React.FC<TrackerProps> = ({ tracker, selectedDay }) => {
                       ({meal.amount + ' ' + meal.measure})
                     </span>
                   </p>
-                  <p>{meal.cal} cal</p>
+                  <p className='flex items-center gap-2'>
+                    {meal.cal} cal{' '}
+                    <button
+                      className='p-1 text-lg text-red-600'
+                      onClick={() => removeAny(meal.id)}
+                    >
+                      <CiCircleRemove />
+                    </button>
+                  </p>
                 </li>
               ))}
           </>
-        ) : (
-          <></>
         )}
-        {tracker.filter((item) => item.type == 'water').length ? (
+        {tracker.filter((item) => item.type == 'water').length > 0 && (
           <>
-            <h2>Water</h2>
-            <li className='flex justify-between rounded-md bg-lightSkinLighter px-4 py-2'>
-              <p>Water</p>
-              <span className=''>
-                {tracker
-                  ?.filter((item: { type: string }) => item.type == 'water')
-                  .reduce((a, b) => (a = a + Number(b.amount)), 0)}{' '}
-                ml
-              </span>
-            </li>
+            <h2 className='font-bold text-darkText'>Water</h2>
+            {tracker
+              ?.filter((item) => item.type == 'water')
+              .map((water) => (
+                <li
+                  key={water.id}
+                  className='flex justify-between rounded-md bg-lightSkinLighter px-4 py-2'
+                >
+                  <p>Water</p>
+                  <p className='flex items-center gap-2'>
+                    {water.amount} ml{' '}
+                    <button
+                      className='p-1 text-lg text-red-600'
+                      onClick={() => removeAny(water.id)}
+                    >
+                      <CiCircleRemove />
+                    </button>
+                  </p>
+                </li>
+              ))}
           </>
-        ) : (
-          <></>
         )}
-        {tracker.filter((item) => item.type == 'exercise').length ? (
+        {/* {tracker
+          ?.filter((item: { type: string }) => item.type == 'water')
+          .reduce((a, b) => (a = a + Number(b.amount)), 0)}{' '}
+        ml */}
+        {tracker.filter((item) => item.type == 'exercise').length > 0 && (
           <>
-            <h2>Exercises</h2>
+            <h2 className='font-bold text-darkText'>Exercises</h2>
             {tracker
               ?.filter((item: { type: string }) => item.type == 'exercise')
               .map((exercise) => (
@@ -278,17 +305,42 @@ const Tracker: React.FC<TrackerProps> = ({ tracker, selectedDay }) => {
                   <p>
                     {exercise.name}{' '}
                     <span className='text-sm'>
-                      ({exercise.time + ' ' + exercise.measure})
+                      ({exercise.amount + ' ' + exercise.measure})
                     </span>
                   </p>
-                  <p>{exercise.cal} cal</p>
+                  <p className='flex items-center gap-2'>
+                    {exercise.cal} cal{' '}
+                    <button
+                      className='p-1 text-lg text-red-600'
+                      onClick={() => removeAny(exercise.id)}
+                    >
+                      <CiCircleRemove />
+                    </button>{' '}
+                  </p>
                 </li>
               ))}
           </>
-        ) : (
-          <></>
         )}
       </ul>
+    </div>
+  );
+};
+
+const Graphs = () => {
+  return (
+    <div className='col-span-2 my-10 grid grid-cols-3 justify-items-center'>
+      <div className='relative flex h-40 w-40 items-center justify-center overflow-hidden rounded-full bg-darkGreen'>
+        <div className='h-32 w-32 rounded-full bg-lightSkin'></div>
+        <div className='absolute top-0 right-0 h-1/2 w-1/2 bg-lightSkin'></div>
+      </div>
+      <div className='relative flex h-40 w-40 items-center justify-center overflow-hidden rounded-full bg-darkGreen'>
+        <div className='h-32 w-32 rounded-full bg-lightSkin'></div>
+        <div className='absolute bottom-0 right-0 h-1/2 w-1/2 bg-lightSkin'></div>
+      </div>
+      <div className='relative flex h-40 w-40 items-center justify-center overflow-hidden rounded-full bg-darkGreen'>
+        <div className='h-32 w-32 rounded-full bg-lightSkin'></div>
+        <div className='absolute left-0 top-0 h-full w-1/2 bg-lightSkin'></div>
+      </div>
     </div>
   );
 };
@@ -317,8 +369,24 @@ const AddCalories: React.FC<CalorieProps> = ({ user, selectedDay }) => {
       cal: 1,
     },
   };
+  const initialExercise = {
+    value: '',
+    label: '',
+    amount: 1,
+    measure: '',
+    cal: 1,
+    base: 1,
+    selection: {
+      amount: 1,
+      cal: 1,
+    },
+  };
+
   const [msg, setMsg] = useState('');
   const [meal, setMeal] = useState(initialMeal);
+  const [water, setWater] = useState({ label: '', value: 0 });
+  const [exercise, setExercise] = useState(initialExercise);
+
   const addMeal = async (e: React.SyntheticEvent) => {
     e.preventDefault();
     try {
@@ -328,7 +396,7 @@ const AddCalories: React.FC<CalorieProps> = ({ user, selectedDay }) => {
         format(selectedDay, 'dd-MM-yyyy')
       );
       await addDoc(collectionRef, {
-        name: meal.label,
+        name: meal.value,
         ...meal.selection,
         measure: meal.measure,
         type: 'meal',
@@ -340,13 +408,60 @@ const AddCalories: React.FC<CalorieProps> = ({ user, selectedDay }) => {
     }
   };
 
+  const addWater = async (e: React.SyntheticEvent) => {
+    e.preventDefault();
+    try {
+      const firstCollectionRef = doc(db, 'datas', user.uid);
+      const collectionRef = collection(
+        firstCollectionRef,
+        format(selectedDay, 'dd-MM-yyyy')
+      );
+      await addDoc(collectionRef, {
+        amount: water.value,
+        type: 'water',
+        userRef: user.uid,
+      });
+      setMsg('Water successfuly added.');
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  const addExercise = async (e: React.SyntheticEvent) => {
+    e.preventDefault();
+    try {
+      const firstCollectionRef = doc(db, 'datas', user.uid);
+      const collectionRef = collection(
+        firstCollectionRef,
+        format(selectedDay, 'dd-MM-yyyy')
+      );
+      await addDoc(collectionRef, {
+        name: exercise.value,
+        ...exercise.selection,
+        measure: exercise.measure,
+        type: 'exercise',
+        userRef: user.uid,
+      });
+      setMsg('Exercise successfuly added.');
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
   const handleChangeMeal = (selectedOption: any) => {
     setMeal(selectedOption);
   };
+  const handleChangeWater = (selectedOption: any) => {
+    setWater(selectedOption);
+  };
+  const handleChangeExercise = (selectedOption: any) => {
+    setExercise(selectedOption);
+  };
+
   const options = [
     {
       value: 'Yulaf',
-      label: 'Yulaf',
+      label: 'Yulaf (gr)',
       amount: 100,
       measure: 'gr',
       cal: 180,
@@ -364,7 +479,7 @@ const AddCalories: React.FC<CalorieProps> = ({ user, selectedDay }) => {
     },
     {
       value: 'Muz',
-      label: 'Muz',
+      label: 'Muz (adet)',
       amount: '1',
       measure: 'piece',
       cal: 90,
@@ -381,6 +496,22 @@ const AddCalories: React.FC<CalorieProps> = ({ user, selectedDay }) => {
       },
     },
   ];
+  const optionsWater = [{ label: '250ml (1 glass)', value: 250 }];
+  const optionsExercise = [
+    {
+      value: 'Running',
+      label: 'Running (min)',
+      amount: 10,
+      measure: 'min',
+      cal: -80,
+      base: 10,
+      selection: {
+        amount: 10,
+        cal: -80,
+      },
+    },
+    ,
+  ];
 
   useEffect(() => {
     const timeout = setTimeout(() => setMsg(''), 3000);
@@ -390,19 +521,19 @@ const AddCalories: React.FC<CalorieProps> = ({ user, selectedDay }) => {
   return (
     <section className='w-full text-darkText lg:col-span-2'>
       <div className='grid grid-cols-1 items-start justify-center gap-6 text-center md:grid-cols-3 [&>]:w-full'>
-        <div className='flex flex-col gap-2'>
+        <div className='flex flex-col gap-2 px-4'>
           <h1 className='my-4 text-lg font-bold text-darkText md:text-xl'>
             Add Calories
           </h1>
           <form className='flex flex-col gap-4 text-left' onSubmit={addMeal}>
-            <Select
-              options={options}
-              name='meals'
-              placeholder='Search Food / Drink'
-              onChange={handleChangeMeal}
-              className='rounded border-darkText'
-            />
             <div className='flex items-center gap-2'>
+              <Select
+                options={options}
+                name='meals'
+                placeholder='Search Food / Drink'
+                onChange={handleChangeMeal}
+                className='w-full rounded border-darkText py-1.5'
+              />
               <input
                 type='number'
                 min={0}
@@ -427,33 +558,83 @@ const AddCalories: React.FC<CalorieProps> = ({ user, selectedDay }) => {
                     },
                   }))
                 }
-                className='w-1/5 rounded border-darkText'
+                className='w-2/5 rounded border-darkText/25 py-1.5'
               />
-              <p>{meal.measure}</p>
             </div>
             <div className='grid grid-cols-3'>
-              <p className=''>Protein: {meal.selection.protein}</p>
-              <p className=''>Carbs: {meal.selection.carbs}</p>
-              <p className=''>Fat: {meal.selection.fat}</p>
+              <p>Protein: {meal.selection.protein}</p>
+              <p>Carbs: {meal.selection.carbs}</p>
+              <p>Fat: {meal.selection.fat}</p>
             </div>
-            <p className=''>Total: {meal.selection.cal} cal</p>
+            <p>Total: {meal.selection.cal} cal</p>
             <button className='rounded bg-darkGreen px-4 py-2 font-bold text-lightSkinLighter'>
               Add
             </button>
-            <p>{msg}</p>
           </form>
         </div>
-        <div>
+        <div className='flex h-full flex-col gap-2 px-4'>
           <h1 className='my-4 text-lg font-bold text-darkText md:text-xl'>
             Add Water
           </h1>
+          <form
+            className='flex w-full flex-col gap-4 text-left'
+            onSubmit={addWater}
+          >
+            <div className='flex items-center gap-2'>
+              <Select
+                options={optionsWater}
+                name='water'
+                placeholder='Water'
+                onChange={handleChangeWater}
+                className='w-full rounded border-darkText py-1.5'
+              />
+            </div>
+            <button className='w-full rounded bg-darkGreen px-4 py-2 font-bold text-lightSkinLighter'>
+              Add
+            </button>
+          </form>
         </div>
-        <div>
+        <div className='flex flex-col gap-2 px-4'>
           <h1 className='my-4 text-lg font-bold text-darkText md:text-xl'>
             Add Exercises
           </h1>
-          sa
+          <form
+            className='flex w-full flex-col gap-4 text-left'
+            onSubmit={addExercise}
+          >
+            <div className='flex items-center gap-2'>
+              <Select
+                options={optionsExercise}
+                name='exercise'
+                placeholder='Exercise'
+                onChange={handleChangeExercise}
+                className='w-full rounded border-darkText py-1.5'
+              />
+              <input
+                type='number'
+                min={0}
+                value={exercise.selection?.amount || 0}
+                onChange={(e: React.BaseSyntheticEvent) =>
+                  setExercise((prevState: any) => ({
+                    ...prevState,
+                    selection: {
+                      amount: e.target.value,
+                      cal: Math.floor(
+                        (prevState.cal / prevState.base) * e.target.value
+                      ),
+                    },
+                  }))
+                }
+                className='w-2/5 rounded border-darkText/25 py-1.5'
+              />
+            </div>
+            <p>Total: {exercise.selection.cal} cal</p>
+            <button className='w-full rounded bg-darkGreen px-4 py-2 font-bold text-lightSkinLighter'>
+              Add
+            </button>
+          </form>
         </div>
+        <p className='py-2 text-center md:col-span-3'>{msg}</p>
       </div>
     </section>
   );
