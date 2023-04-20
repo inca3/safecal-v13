@@ -25,31 +25,21 @@ import { useRouter } from 'next/navigation';
 
 import Select from 'react-select';
 import {
-  DocumentData,
-  QuerySnapshot,
   addDoc,
   collection,
   deleteDoc,
   doc,
   onSnapshot,
   query,
+  getCountFromServer,
 } from 'firebase/firestore';
 import { User } from 'firebase/auth';
 
-interface CalendarProps {
-  selectedDay: Date;
-  setSelectedDay: React.Dispatch<React.SetStateAction<Date>>;
-  days: Date[];
-  goNextMonth: any;
-  goPrevMonth: any;
-  firstDayCurrentMonth: Date;
-}
-
 const AppHome = () => {
   const router = useRouter();
-  const [user, loading] = useAuthState(auth);
 
-  const [dailyData, setDailyData] = useState<QuerySnapshot<DocumentData>[]>([]);
+  const [user, loading] = useAuthState(auth);
+  const [dailyData, setDailyData] = useState<any>([]);
 
   const today = startOfToday();
   const [selectedDay, setSelectedDay] = useState(today);
@@ -70,6 +60,9 @@ const AppHome = () => {
     setCurrentMonth(format(firstDayNextMonth, 'MMM-yyy'));
   }
 
+  const [datesWithData, setDatesWithData] = useState<any[]>([]);
+  const [msg, setMsg] = useState('');
+
   useEffect(() => {
     if (!user) {
       router.push('/sign-in');
@@ -88,7 +81,6 @@ const AppHome = () => {
         setDailyData(
           snapshot.docs.map((doc) => ({ ...doc.data(), id: doc.id }))
         );
-        console.log(dailyData);
       });
       return unsubscribe;
     };
@@ -97,10 +89,26 @@ const AppHome = () => {
     }
   }, [selectedDay]);
 
+  useEffect(() => {
+    const getCollectionCount = async (dayName: Date) => {
+      const col = collection(
+        doc(db, 'datas', user.uid),
+        format(dayName, 'dd-MM-yyyy')
+      );
+      const snapshot = await getCountFromServer(col);
+      if (snapshot.data().count > 0) {
+        setDatesWithData((data) => [...data, format(dayName, 'dd-MM-yyyy')]);
+      }
+    };
+    if (user) {
+      days.forEach((day) => getCollectionCount(day));
+    }
+  }, [currentMonth]);
+
   if (loading) return <></>;
 
   return (
-    <div className='container grid grid-cols-1 justify-center gap-10 py-10 px-10 md:py-16 lg:grid-cols-2'>
+    <div className='container mx-auto grid grid-cols-1 gap-10 py-10 md:py-16 lg:grid-cols-2 lg:px-10'>
       <Calendar
         selectedDay={selectedDay}
         setSelectedDay={setSelectedDay}
@@ -108,14 +116,36 @@ const AppHome = () => {
         goNextMonth={goNextMonth}
         goPrevMonth={goPrevMonth}
         firstDayCurrentMonth={firstDayCurrentMonth}
+        datesWithData={datesWithData}
       />
-      <Tracker tracker={dailyData} selectedDay={selectedDay} user={user} />
-      <Graphs />
-      <AddCalories user={user} selectedDay={selectedDay} />
+      <Tracker
+        tracker={dailyData}
+        selectedDay={selectedDay}
+        user={user}
+        setMsg={setMsg}
+        msg={msg}
+      />
+      <Graphs tracker={dailyData} />
+      <AddCalories
+        user={user}
+        selectedDay={selectedDay}
+        msg={msg}
+        setMsg={setMsg}
+      />
     </div>
   );
 };
 export default AppHome;
+
+interface CalendarProps {
+  selectedDay: Date;
+  setSelectedDay: React.Dispatch<React.SetStateAction<Date>>;
+  days: Date[];
+  goNextMonth: any;
+  goPrevMonth: any;
+  firstDayCurrentMonth: Date;
+  datesWithData: string[];
+}
 
 const Calendar: React.FC<CalendarProps> = ({
   selectedDay,
@@ -124,10 +154,12 @@ const Calendar: React.FC<CalendarProps> = ({
   goNextMonth,
   goPrevMonth,
   firstDayCurrentMonth,
+  datesWithData,
 }) => {
   const weekDays = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
+
   return (
-    <div>
+    <div className='col-span-1'>
       <div className='mb-10 flex items-center justify-between'>
         <p className='text-lg font-bold'>
           {format(firstDayCurrentMonth, 'MMMM yyyy')}
@@ -178,13 +210,11 @@ const Calendar: React.FC<CalendarProps> = ({
               <time dateTime={format(day, 'dd-MM-yyyy')}>
                 {format(day, 'd')}
               </time>
-              {/* {data.find(
-                (data) =>
-                  format(new Date(data.date), 'dd-MM-yyyy') ==
-                  format(day, 'dd-MM-yyyy')
+              {datesWithData.find(
+                (data) => data == format(day, 'dd-MM-yyyy')
               ) && (
-                <BsDot className='absolute bottom-0 w-full text-center text-darkGreen' />
-              )} */}
+                <BsDot className='absolute -bottom-2 w-full text-center text-3xl text-darkGreen md:bottom-0' />
+              )}
             </button>
           </div>
         ))}
@@ -195,7 +225,9 @@ const Calendar: React.FC<CalendarProps> = ({
 
 interface TrackerProps {
   selectedDay: Date;
-  user: User;
+  user: User | any;
+  setMsg: React.Dispatch<React.SetStateAction<string>>;
+  msg: string;
   tracker: [
     {
       id: string;
@@ -213,24 +245,31 @@ interface TrackerProps {
   ];
 }
 
-const Tracker: React.FC<TrackerProps> = ({ tracker, selectedDay, user }) => {
+const Tracker: React.FC<TrackerProps> = ({
+  tracker,
+  selectedDay,
+  user,
+  setMsg,
+  msg,
+}) => {
   const removeAny = async (id: string) => {
     try {
       const docRef = doc(db, 'datas', user.uid);
       await deleteDoc(doc(docRef, format(selectedDay, 'dd-MM-yyyy'), id));
+      setMsg('Data removed.');
     } catch (error) {
       console.log(error);
     }
   };
   if (tracker.length < 1) {
     return (
-      <h1 className='place-self-center text-xl font-bold text-darkText'>
+      <h1 className='place-self-center text-center text-xl font-bold text-darkText'>
         No information found for selected day.
       </h1>
     );
   }
   return (
-    <div className='my-4 flex flex-col gap-2 rounded bg-lightSkin p-4'>
+    <div className='my-4 flex w-full flex-col gap-2 rounded bg-lightSkin p-4'>
       <h1 className='text-lg font-bold text-darkGreen'>
         {format(selectedDay, 'dd MMMM yyyy')}
       </h1>
@@ -288,10 +327,6 @@ const Tracker: React.FC<TrackerProps> = ({ tracker, selectedDay, user }) => {
               ))}
           </>
         )}
-        {/* {tracker
-          ?.filter((item: { type: string }) => item.type == 'water')
-          .reduce((a, b) => (a = a + Number(b.amount)), 0)}{' '}
-        ml */}
         {tracker.filter((item) => item.type == 'exercise').length > 0 && (
           <>
             <h2 className='font-bold text-darkText'>Exercises</h2>
@@ -326,31 +361,62 @@ const Tracker: React.FC<TrackerProps> = ({ tracker, selectedDay, user }) => {
   );
 };
 
-const Graphs = () => {
+interface GraphProps {
+  tracker: [
+    {
+      id: string;
+      cal?: number;
+      amount: number;
+      measure: string;
+      carbs?: number;
+      fat?: number;
+      protein?: number;
+      type: string;
+      name: string;
+      userRef: string;
+      time?: number;
+    }
+  ];
+}
+
+const Graphs: React.FC<GraphProps> = ({ tracker }) => {
   return (
-    <div className='col-span-2 my-10 grid grid-cols-3 justify-items-center'>
-      <div className='relative flex h-40 w-40 items-center justify-center overflow-hidden rounded-full bg-darkGreen'>
-        <div className='h-32 w-32 rounded-full bg-lightSkin'></div>
-        <div className='absolute top-0 right-0 h-1/2 w-1/2 bg-lightSkin'></div>
+    <div className='my-10 grid grid-cols-3 justify-items-center gap-10 lg:col-span-2'>
+      <div className='flex h-28 w-28 items-center justify-center rounded-full border-4 border-darkGreen md:h-40 md:w-40 md:text-xl'>
+        {tracker
+          ?.filter((item: { type: string }) => item.type == 'meal')
+          .reduce((a, b) => (a = a + Number(b.cal)), 0)}{' '}
+        cals
       </div>
-      <div className='relative flex h-40 w-40 items-center justify-center overflow-hidden rounded-full bg-darkGreen'>
-        <div className='h-32 w-32 rounded-full bg-lightSkin'></div>
-        <div className='absolute bottom-0 right-0 h-1/2 w-1/2 bg-lightSkin'></div>
+      <div className='flex h-28 w-28 items-center justify-center rounded-full border-4 border-darkGreen md:h-40 md:w-40 md:text-xl'>
+        {tracker
+          ?.filter((item: { type: string }) => item.type == 'water')
+          .reduce((a, b) => (a = a + Number(b.amount)), 0)}{' '}
+        ml
       </div>
-      <div className='relative flex h-40 w-40 items-center justify-center overflow-hidden rounded-full bg-darkGreen'>
-        <div className='h-32 w-32 rounded-full bg-lightSkin'></div>
-        <div className='absolute left-0 top-0 h-full w-1/2 bg-lightSkin'></div>
+      <div className='flex h-28 w-28 items-center justify-center rounded-full border-4 border-darkGreen md:h-40 md:w-40 md:text-xl'>
+        {tracker
+          ?.filter((item: { type: string }) => item.type == 'exercise')
+          .reduce((a, b) => (a = a + Number(b.cal)), 0)}{' '}
+        cals
       </div>
     </div>
   );
 };
 
 interface CalorieProps {
-  user: User;
+  user: User | any;
   selectedDay: Date;
+  msg: string;
+  setMsg: React.Dispatch<React.SetStateAction<string>>;
 }
 
-const AddCalories: React.FC<CalorieProps> = ({ user, selectedDay }) => {
+const AddCalories: React.FC<CalorieProps> = ({
+  user,
+  selectedDay,
+  setMsg,
+  msg,
+}) => {
   const initialMeal = {
     value: '',
     label: '',
@@ -382,7 +448,6 @@ const AddCalories: React.FC<CalorieProps> = ({ user, selectedDay }) => {
     },
   };
 
-  const [msg, setMsg] = useState('');
   const [meal, setMeal] = useState(initialMeal);
   const [water, setWater] = useState({ label: '', value: 0 });
   const [exercise, setExercise] = useState(initialExercise);
@@ -519,8 +584,8 @@ const AddCalories: React.FC<CalorieProps> = ({ user, selectedDay }) => {
   }, [msg]);
 
   return (
-    <section className='w-full text-darkText lg:col-span-2'>
-      <div className='grid grid-cols-1 items-start justify-center gap-6 text-center md:grid-cols-3 [&>]:w-full'>
+    <div className='w-full text-darkText lg:col-span-2'>
+      <div className='grid grid-cols-1 justify-center gap-6 text-center md:auto-rows-auto md:grid-cols-3 [&>]:h-full [&>]:w-full'>
         <div className='flex flex-col gap-2 px-4'>
           <h1 className='my-4 text-lg font-bold text-darkText md:text-xl'>
             Add Calories
@@ -530,7 +595,7 @@ const AddCalories: React.FC<CalorieProps> = ({ user, selectedDay }) => {
               <Select
                 options={options}
                 name='meals'
-                placeholder='Search Food / Drink'
+                placeholder='Food/Drink'
                 onChange={handleChangeMeal}
                 className='w-full rounded border-darkText py-1.5'
               />
@@ -561,13 +626,13 @@ const AddCalories: React.FC<CalorieProps> = ({ user, selectedDay }) => {
                 className='w-2/5 rounded border-darkText/25 py-1.5'
               />
             </div>
-            <div className='grid grid-cols-3'>
+            <div className='grid grid-cols-1 lg:grid-cols-3'>
               <p>Protein: {meal.selection.protein}</p>
               <p>Carbs: {meal.selection.carbs}</p>
               <p>Fat: {meal.selection.fat}</p>
             </div>
             <p>Total: {meal.selection.cal} cal</p>
-            <button className='rounded bg-darkGreen px-4 py-2 font-bold text-lightSkinLighter'>
+            <button className='w-full rounded bg-darkGreen px-4 py-2 font-bold text-lightSkinLighter'>
               Add
             </button>
           </form>
@@ -577,7 +642,7 @@ const AddCalories: React.FC<CalorieProps> = ({ user, selectedDay }) => {
             Add Water
           </h1>
           <form
-            className='flex w-full flex-col gap-4 text-left'
+            className='flex h-full w-full flex-col gap-4 text-left'
             onSubmit={addWater}
           >
             <div className='flex items-center gap-2'>
@@ -589,17 +654,17 @@ const AddCalories: React.FC<CalorieProps> = ({ user, selectedDay }) => {
                 className='w-full rounded border-darkText py-1.5'
               />
             </div>
-            <button className='w-full rounded bg-darkGreen px-4 py-2 font-bold text-lightSkinLighter'>
+            <button className='mt-auto w-full rounded bg-darkGreen px-4 py-2 font-bold text-lightSkinLighter'>
               Add
             </button>
           </form>
         </div>
-        <div className='flex flex-col gap-2 px-4'>
+        <div className='flex h-full flex-col gap-2 px-4'>
           <h1 className='my-4 text-lg font-bold text-darkText md:text-xl'>
             Add Exercises
           </h1>
           <form
-            className='flex w-full flex-col gap-4 text-left'
+            className='flex h-full w-full flex-col gap-4 text-left'
             onSubmit={addExercise}
           >
             <div className='flex items-center gap-2'>
@@ -629,13 +694,15 @@ const AddCalories: React.FC<CalorieProps> = ({ user, selectedDay }) => {
               />
             </div>
             <p>Total: {exercise.selection.cal} cal</p>
-            <button className='w-full rounded bg-darkGreen px-4 py-2 font-bold text-lightSkinLighter'>
+            <button className='mt-auto w-full rounded bg-darkGreen px-4 py-2 font-bold text-lightSkinLighter'>
               Add
             </button>
           </form>
         </div>
-        <p className='py-2 text-center md:col-span-3'>{msg}</p>
+        <p className='pointer-events-none fixed top-10 right-10 rounded-md bg-darkGreen p-4 py-2 text-center text-lightSkinLighter opacity-100 transition-opacity duration-300 empty:opacity-0 md:col-span-3'>
+          {msg}
+        </p>
       </div>
-    </section>
+    </div>
   );
 };

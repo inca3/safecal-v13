@@ -28,14 +28,7 @@ const SignIn = () => {
   const googleProvider = new GoogleAuthProvider();
   const GoogleLogin = async () => {
     try {
-      const result = await signInWithPopup(auth, googleProvider);
-      const userRef = doc(db, 'users', result.user.uid);
-      await setDoc(userRef, {
-        name: result.user.displayName,
-        email: result.user.email,
-        uid: result.user.uid,
-      });
-      router.push('/app');
+      await signInWithPopup(auth, googleProvider);
     } catch (error) {
       console.log(error);
     }
@@ -43,14 +36,23 @@ const SignIn = () => {
   const EmailLogin = async () => {
     const auth = getAuth();
     try {
-      const result = await signInWithEmailAndPassword(auth, email, password);
+      await signInWithEmailAndPassword(auth, email, password);
     } catch (error) {
       console.log(error);
     }
   };
 
   useEffect(() => {
+    const addUserToDb = async () => {
+      const userRef = doc(db, 'users', user.uid);
+      await setDoc(userRef, {
+        name: user.displayName,
+        email: user.email,
+        uid: user.uid,
+      });
+    };
     if (user) {
+      addUserToDb();
       router.push('/app');
     }
   }, [user]);
