@@ -1,8 +1,8 @@
 ---
 id: 2
 title: How Exercise Tracking Can Help You Reach Your Fitness Goals
-sum:
-date:
+sum: Are you struggling to stay motivated with your fitness routine? Tracking your exercises can provide the extra motivation you need to reach your fitness goals.
+date: '2023/02/12'
 author:
 image: /assets/blog/post2/pic1.jpg
 ---

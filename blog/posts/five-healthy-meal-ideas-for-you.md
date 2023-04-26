@@ -1,8 +1,8 @@
 ---
 id: 3
 title: 5 Healthy Meal Ideas for Calorie Counters
-sum:
-date:
+sum: Struggling to come up with healthy meal ideas while counting calories? We've got you covered! Here are five delicious and healthy meal ideas that are perfect for calorie counters.
+date: '2023/04/22'
 author:
 image: /assets/blog/post3/pic1.jpg
 ---
@@ -29,13 +29,13 @@ Brown ground turkey in a large pot, then add diced tomatoes, beans, and chili po
 
 ## Quinoa bowl
 
-![Quinoa bowl](/assets/blog/post3/food4.jpg)
+![Quinoa bowl](/assets/blog/post3/food4.png)
 
 Cook quinoa according to package instructions, then top with your favorite veggies (such as cherry tomatoes, cucumbers, and avocado), a small amount of feta cheese, and a drizzle of balsamic vinaigrette.
 
 ## Salmon with sweet potato and asparagus
 
-![Salmon with sweet potato and asparagus](/assets/blog/post3/food5.jpg)
+![Salmon with sweet potato and asparagus](/assets/blog/post3/food5.png)
 
 Roast sweet potato and asparagus in the oven until tender, then top with grilled salmon seasoned with lemon juice and dill.
 

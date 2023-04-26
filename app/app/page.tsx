@@ -137,16 +137,6 @@ const AppHome = () => {
 };
 export default AppHome;
 
-interface CalendarProps {
-  selectedDay: Date;
-  setSelectedDay: React.Dispatch<React.SetStateAction<Date>>;
-  days: Date[];
-  goNextMonth: any;
-  goPrevMonth: any;
-  firstDayCurrentMonth: Date;
-  datesWithData: string[];
-}
-
 const Calendar: React.FC<CalendarProps> = ({
   selectedDay,
   setSelectedDay,
@@ -223,28 +213,6 @@ const Calendar: React.FC<CalendarProps> = ({
   );
 };
 
-interface TrackerProps {
-  selectedDay: Date;
-  user: User | any;
-  setMsg: React.Dispatch<React.SetStateAction<string>>;
-  msg: string;
-  tracker: [
-    {
-      id: string;
-      cal: number;
-      amount: number;
-      measure: string;
-      carbs?: number;
-      fat?: number;
-      protein?: number;
-      type: string;
-      name: string;
-      userRef: string;
-      time?: number;
-    }
-  ];
-}
-
 const Tracker: React.FC<TrackerProps> = ({
   tracker,
   selectedDay,
@@ -306,25 +274,27 @@ const Tracker: React.FC<TrackerProps> = ({
         {tracker.filter((item) => item.type == 'water').length > 0 && (
           <>
             <h2 className='font-bold text-darkText'>Water</h2>
-            {tracker
-              ?.filter((item) => item.type == 'water')
-              .map((water) => (
-                <li
-                  key={water.id}
-                  className='flex justify-between rounded-md bg-lightSkinLighter px-4 py-2'
-                >
-                  <p>Water</p>
-                  <p className='flex items-center gap-2'>
-                    {water.amount} ml{' '}
-                    <button
-                      className='p-1 text-lg text-red-600'
-                      onClick={() => removeAny(water.id)}
-                    >
-                      <CiCircleRemove />
-                    </button>
-                  </p>
-                </li>
-              ))}
+            <div className='gap-2 lg:grid lg:grid-cols-2'>
+              {tracker
+                ?.filter((item) => item.type == 'water')
+                .map((water) => (
+                  <li
+                    key={water.id}
+                    className='flex justify-between rounded-md bg-lightSkinLighter px-4 py-2'
+                  >
+                    <p>Water</p>
+                    <p className='flex items-center gap-2'>
+                      {water.amount} ml{' '}
+                      <button
+                        className='p-1 text-lg text-red-600'
+                        onClick={() => removeAny(water.id)}
+                      >
+                        <CiCircleRemove />
+                      </button>
+                    </p>
+                  </li>
+                ))}
+            </div>
           </>
         )}
         {tracker.filter((item) => item.type == 'exercise').length > 0 && (
@@ -361,24 +331,6 @@ const Tracker: React.FC<TrackerProps> = ({
   );
 };
 
-interface GraphProps {
-  tracker: [
-    {
-      id: string;
-      cal?: number;
-      amount: number;
-      measure: string;
-      carbs?: number;
-      fat?: number;
-      protein?: number;
-      type: string;
-      name: string;
-      userRef: string;
-      time?: number;
-    }
-  ];
-}
-
 const Graphs: React.FC<GraphProps> = ({ tracker }) => {
   return (
     <div className='my-10 grid grid-cols-3 justify-items-center gap-10 lg:col-span-2'>
@@ -403,13 +355,6 @@ const Graphs: React.FC<GraphProps> = ({ tracker }) => {
     </div>
   );
 };
-
-interface CalorieProps {
-  user: User | any;
-  selectedDay: Date;
-  msg: string;
-  setMsg: React.Dispatch<React.SetStateAction<string>>;
-}
 
 const AddCalories: React.FC<CalorieProps> = ({
   user,
@@ -451,6 +396,10 @@ const AddCalories: React.FC<CalorieProps> = ({
   const [meal, setMeal] = useState(initialMeal);
   const [water, setWater] = useState({ label: '', value: 0 });
   const [exercise, setExercise] = useState(initialExercise);
+
+  const [mealOptions, setMealOptions] = useState([]);
+  const [waterOptions, setWaterOptions] = useState([]);
+  const [exerciseOptions, setExerciseOptions] = useState([]);
 
   const addMeal = async (e: React.SyntheticEvent) => {
     e.preventDefault();
@@ -523,60 +472,27 @@ const AddCalories: React.FC<CalorieProps> = ({
     setExercise(selectedOption);
   };
 
-  const options = [
-    {
-      value: 'Yulaf',
-      label: 'Yulaf (gr)',
-      amount: 100,
-      measure: 'gr',
-      cal: 180,
-      protein: 24,
-      carbs: 64,
-      fat: 12,
-      base: 100,
-      selection: {
-        amount: 100,
-        protein: 24,
-        carbs: 64,
-        fat: 12,
-        cal: 180,
-      },
-    },
-    {
-      value: 'Muz',
-      label: 'Muz (adet)',
-      amount: '1',
-      measure: 'piece',
-      cal: 90,
-      protein: 10,
-      carbs: 70,
-      fat: 10,
-      base: 1,
-      selection: {
-        amount: 1,
-        protein: 10,
-        carbs: 70,
-        fat: 10,
-        cal: 90,
-      },
-    },
-  ];
-  const optionsWater = [{ label: '250ml (1 glass)', value: 250 }];
-  const optionsExercise = [
-    {
-      value: 'Running',
-      label: 'Running (min)',
-      amount: 10,
-      measure: 'min',
-      cal: -80,
-      base: 10,
-      selection: {
-        amount: 10,
-        cal: -80,
-      },
-    },
-    ,
-  ];
+  useEffect(() => {
+    // set options
+    const getMealOptions = async () => {
+      const res = await fetch('api/meals');
+      const data = await res.json();
+      setMealOptions(data.mealOptions);
+    };
+    const getWaterOptions = async () => {
+      const res = await fetch('api/water');
+      const data = await res.json();
+      setWaterOptions(data.waterOptions);
+    };
+    const getExerciseOptions = async () => {
+      const res = await fetch('api/exercises');
+      const data = await res.json();
+      setExerciseOptions(data.exerciseOptions);
+    };
+    getMealOptions();
+    getWaterOptions();
+    getExerciseOptions();
+  }, []);
 
   useEffect(() => {
     const timeout = setTimeout(() => setMsg(''), 3000);
@@ -593,7 +509,7 @@ const AddCalories: React.FC<CalorieProps> = ({
           <form className='flex flex-col gap-4 text-left' onSubmit={addMeal}>
             <div className='flex items-center gap-2'>
               <Select
-                options={options}
+                options={mealOptions}
                 name='meals'
                 placeholder='Food/Drink'
                 onChange={handleChangeMeal}
@@ -608,18 +524,22 @@ const AddCalories: React.FC<CalorieProps> = ({
                     ...prevState,
                     selection: {
                       amount: e.target.value,
-                      cal: Math.floor(
-                        (prevState.cal / prevState.base) * e.target.value
-                      ),
-                      protein: Math.floor(
-                        (prevState.protein / prevState.base) * e.target.value
-                      ),
-                      carbs: Math.floor(
-                        (prevState.carbs / prevState.base) * e.target.value
-                      ),
-                      fat: Math.floor(
-                        (prevState.fat / prevState.base) * e.target.value
-                      ),
+                      cal: (
+                        (prevState.cal / prevState.base) *
+                        e.target.value
+                      ).toFixed(2),
+                      protein: (
+                        (prevState.protein / prevState.base) *
+                        e.target.value
+                      ).toFixed(2),
+                      carbs: (
+                        (prevState.carbs / prevState.base) *
+                        e.target.value
+                      ).toFixed(2),
+                      fat: (
+                        (prevState.fat / prevState.base) *
+                        e.target.value
+                      ).toFixed(2),
                     },
                   }))
                 }
@@ -647,7 +567,7 @@ const AddCalories: React.FC<CalorieProps> = ({
           >
             <div className='flex items-center gap-2'>
               <Select
-                options={optionsWater}
+                options={waterOptions}
                 name='water'
                 placeholder='Water'
                 onChange={handleChangeWater}
@@ -669,7 +589,7 @@ const AddCalories: React.FC<CalorieProps> = ({
           >
             <div className='flex items-center gap-2'>
               <Select
-                options={optionsExercise}
+                options={exerciseOptions}
                 name='exercise'
                 placeholder='Exercise'
                 onChange={handleChangeExercise}
@@ -684,9 +604,9 @@ const AddCalories: React.FC<CalorieProps> = ({
                     ...prevState,
                     selection: {
                       amount: e.target.value,
-                      cal: Math.floor(
+                      cal: Math.ceil(
                         (prevState.cal / prevState.base) * e.target.value
-                      ),
+                      ).toFixed(2),
                     },
                   }))
                 }

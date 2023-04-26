@@ -1,8 +1,8 @@
 ---
 id: 1
 title: The Importance of Tracking Water Intake for Weight Loss
-sum:
-date:
+sum: Are you struggling to lose weight despite your best efforts? Have you considered tracking your water intake as part of your weight loss journey?
+date: '2023/03/21'
 author:
 image: /assets/blog/post1/pic1.jpg
 ---
