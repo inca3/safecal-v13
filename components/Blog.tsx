@@ -1,40 +1,27 @@
 import Image from 'next/image';
 import Link from 'next/link';
+import { getSortedPostsData } from '@/app/blog/page';
 
-import postImage from '@/assets/blog/blog-post-1.jpg';
+const posts = getSortedPostsData();
+const latestPost = posts[0];
 
-const samplePost = {
-  id: 0,
-  title: 'Why you need to work out?',
-  sum: `Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed ullamcorper condimentum nulla vitae porttitor. Morbi lobortis ornare iaculis. Maecenas non justo non sem suscipit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed ullamcorper condimentum nulla vitae porttitor. Morbi lobortis ornare iaculis. Maecenas non justo no...`,
-  body: 'post body',
-  image: postImage,
-  href: '/',
-};
+type PostProps = { post: BlogPost };
 
-interface Post {
-  post: {
-    id: number;
-    title: string;
-    sum: string;
-    body: string;
-    image: any;
-    href: string;
-  };
-}
-
-const BlogPost: React.FC<Post> = ({ post }) => {
+const BlogPost: React.FC<PostProps> = ({ post }) => {
   return (
-    <div className='grid grid-cols-1 gap-6 md:grid-cols-2 md:items-center'>
-      <Image
-        src={post.image}
-        alt={post.title}
-        className='max-h-80 w-full rounded-md object-cover shadow-blogImage shadow-lightSkinLighter md:w-full md:max-w-none'
-      />
+    <div className='grid grid-cols-1 gap-6 md:grid-cols-2 md:items-center md:gap-10'>
+      <div className='relative h-80 w-full'>
+        <Image
+          src={post.image}
+          alt={post.title}
+          fill
+          className='max-h-80 w-full rounded-md object-cover shadow-blogImage shadow-lightSkinLighter md:w-full md:max-w-none'
+        />
+      </div>
       <div className='flex flex-col gap-4 text-lightSkinLighter'>
         <h1 className='text-lg font-bold'>{post.title}</h1>
         <p>{post.sum}</p>
-        <Link href={post.href} className='text-sm font-bold'>
+        <Link href={`/blog/post/${post.slug}`} className='text-sm font-bold'>
           See More &nbsp; {'>'}
         </Link>
       </div>
@@ -49,13 +36,13 @@ const Blog = () => {
         Blog
       </h1>
       <div className='container px-16'>
-        <BlogPost post={samplePost} />
+        <BlogPost post={latestPost} />
       </div>
-      <div className='mt-8 flex w-full items-center justify-center gap-2 md:mt-12'>
+      {/* <div className='mt-8 flex w-full items-center justify-center gap-2 md:mt-12'>
         <div className='h-2 w-2 rounded-full bg-white'></div>
         <div className='h-2 w-2 rounded-full bg-white/50'></div>
         <div className='h-2 w-2 rounded-full bg-white/50'></div>
-      </div>
+      </div> */}
     </section>
   );
 };

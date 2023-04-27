@@ -48,7 +48,7 @@ export default async function Post({ params }: { params: { slug: string } }) {
           className='max-w-none object-cover'
         />
       </div>
-      <div dangerouslySetInnerHTML={{ __html: contentHtml }}></div>
+      <section dangerouslySetInnerHTML={{ __html: contentHtml }} />
     </article>
   );
 }

@@ -101,7 +101,7 @@ const LatestPost = ({ latestPost }: LatestPostProps) => {
   return (
     <Link
       href={`/blog/post/${slug}`}
-      className='grid grid-cols-1 gap-10 overflow-hidden rounded-md bg-darkGreen p-20 md:grid-cols-2 md:items-center md:gap-14'
+      className='grid grid-cols-1 gap-10 overflow-hidden rounded-md bg-darkGreen p-10 md:grid-cols-2 md:items-center md:gap-14 md:p-20'
     >
       <div className='relative h-80'>
         <Image
@@ -115,9 +115,7 @@ const LatestPost = ({ latestPost }: LatestPostProps) => {
         <p className='text-sm'>{format(new Date(date), 'dd MMMM yyyy')}</p>
         <h1 className='text-lg font-bold'>{title}</h1>
         <p>{sum}</p>
-        <Link href={`/blog/post/${slug}`} className='text-sm font-bold'>
-          See More &nbsp; {'>'}
-        </Link>
+        <p className='text-sm font-bold'>See More &nbsp; {'>'}</p>
       </div>
     </Link>
   );
