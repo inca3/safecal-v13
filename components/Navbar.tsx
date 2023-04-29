@@ -49,12 +49,20 @@ const Navbar = () => {
       <Nav />
       <ResNav isOpen={isOpen} closeMenu={closeMenu} isUser={user} />
       <div className='hidden gap-2 place-self-end lg:flex lg:items-center lg:justify-center'>
-        {pathName != '/app' && (
+        {pathName != '/app' && user && (
           <Link
             href={'/app'}
             className=' rounded-md bg-darkGreen py-2 px-8 font-semibold text-lightSkinLighter '
           >
             Go to app
+          </Link>
+        )}
+        {!user && (
+          <Link
+            href={'/sign-in'}
+            className=' rounded-md bg-darkGreen py-2 px-8 font-semibold text-lightSkinLighter '
+          >
+            Sign In
           </Link>
         )}
         <ProfileMenu user={user} logOut={logOut} />
