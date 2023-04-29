@@ -22,6 +22,8 @@ import { BsDot } from 'react-icons/bs';
 import { auth, db } from '@/utils/firebase';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { useRouter } from 'next/navigation';
+import { User } from 'firebase/auth';
+import { Auth } from 'firebase/auth';
 
 import Select from 'react-select';
 import {
@@ -33,7 +35,6 @@ import {
   query,
   getCountFromServer,
 } from 'firebase/firestore';
-import { User } from 'firebase/auth';
 
 const AppHome = () => {
   const router = useRouter();
@@ -597,7 +598,7 @@ const AddCalories: React.FC<CalorieProps> = ({
               />
               <input
                 type='number'
-                min={0}
+                min={1}
                 value={exercise.selection?.amount || 0}
                 onChange={(e: React.BaseSyntheticEvent) =>
                   setExercise((prevState: any) => ({
@@ -606,7 +607,7 @@ const AddCalories: React.FC<CalorieProps> = ({
                       amount: e.target.value,
                       cal: Math.ceil(
                         (prevState.cal / prevState.base) * e.target.value
-                      ).toFixed(2),
+                      ).toFixed(0),
                     },
                   }))
                 }
