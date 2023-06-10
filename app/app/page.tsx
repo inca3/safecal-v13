@@ -275,7 +275,7 @@ const Tracker: React.FC<TrackerProps> = ({
         {tracker.filter((item) => item.type == 'water').length > 0 && (
           <>
             <h2 className='font-bold text-darkText'>Water</h2>
-            <div className='gap-2 lg:grid lg:grid-cols-2'>
+            <div className='grid grid-cols-1 gap-2 lg:grid-cols-2'>
               {tracker
                 ?.filter((item) => item.type == 'water')
                 .map((water) => (
