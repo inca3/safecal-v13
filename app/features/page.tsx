@@ -14,7 +14,8 @@ const Feature: React.FC<FeatureInterface> = ({ feature }) => {
         <h1 className='text-lg font-bold text-darkGreen'>{feature.title}</h1>
         <p>{feature.content}</p>
       </div>
-      <Image src={feature.bgImage} alt={feature.title} />
+        
+      <Image src={feature.bgImage} alt={feature.title}  loading='eager' />
     </div>
   );
 };

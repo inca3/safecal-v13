@@ -1,6 +1,6 @@
 import Image from 'next/image';
 import Link from 'next/link';
-import HeaderImage from '@/assets/header-img.png';
+import HeaderImage from '@/assets/header-img.jpg';
 
 const Header = () => {
   return (
@@ -9,6 +9,7 @@ const Header = () => {
         src={HeaderImage}
         alt={'header'}
         className='shadow-header h-full w-full object-cover object-center saturate-0 md:object-center'
+        loading='eager'
       />
       <div className='absolute top-0 left-0 h-full w-full bg-darkGreen bg-opacity-80 text-lightSkin'>
         <div className='container flex h-full w-full flex-col items-center justify-center gap-10 text-center'>
