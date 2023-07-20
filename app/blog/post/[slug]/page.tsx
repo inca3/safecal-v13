@@ -31,7 +31,7 @@ export default async function Post({ params }: { params: { slug: string } }) {
 
   const { title, date, image, contentHtml } = await getPostData(slug);
   return (
-    <article className='prose mx-auto my-10 px-4 lg:my-20'>
+    <article className='prose max-w-4xl mx-auto my-10 px-4 lg:my-20'>
       <Link
         href={'/blog'}
         className=' rounded bg-darkGreen py-2 px-4 text-lightSkinLighter decoration-transparent'
